@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Habit Re:coder - Transform Your Life</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: white;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+        }
+        
+        .tagline {
+            font-size: 24px;
+            opacity: 0.95;
+            margin-bottom: 40px;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .option-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+        }
+        
+        .option-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .option-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .option-features {
+            list-style: none;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .option-features li {
+            padding: 8px 0;
+            color: #666;
+        }
+        
+        .option-features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .email-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            margin-top: 30px;
+        }
+        
+        .email-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .checkbox-group input {
+            margin-right: 10px;
+        }
+        
+        .skip-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .skip-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .skip-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+            .tagline {
+                font-size: 18px;
+            }
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo.ico') }}" alt="Habit Re:coder Logo">
+            </div>
+            <h1>🎯 Habit Re:coder</h1>
+            <p class="tagline">Transform Your Life with Smart Habit Tracking</p>
+        </div>
+        
+        <div class="options">
+            <!-- Desktop Option -->
+            <div class="option-card">
+                <div class="option-icon">💻</div>
+                <h2 class="option-title">Desktop App</h2>
+                <ul class="option-features">
+                    <li>100% Offline & Private</li>
+                    <li>No Account Required</li>
+                    <li>Lightning Fast</li>
+                    <li>Data Stays on Your Computer</li>
+                    <li>Free Forever</li>
+                </ul>
+                <button class="btn btn-primary" onclick="showDownloadForm('desktop')">
+                    Download Desktop
+                </button>
+            </div>
+            
+            <!-- Web Option -->
+            <div class="option-card">
+                <div class="option-icon">🌐</div>
+                <h2 class="option-title">Web Version</h2>
+                <ul class="option-features">
+                    <li>Access Anywhere</li>
+                    <li>Cloud Sync</li>
+                    <li>Multi-Device Support</li>
+                    <li>Automatic Backups</li>
+                    <li>Always Updated</li>
+                </ul>
+                <a href="/web" class="btn btn-primary">
+                    Try Web Version
+                </a>
+            </div>
+        </div>
+        
+        <!-- Download Form (Hidden initially) -->
+        <div id="downloadForm" class="email-section" style="display: none;">
+            <h3>📧 Get Habit Re:coder</h3>
+            <p style="margin-bottom: 20px; color: #666;">
+                Enter your email to receive download link and updates (optional)
+            </p>
+            
+            <form method="POST" action="/download">
+                <input type="hidden" name="platform" id="platformInput" value="">
+                
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="your@email.com" required>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" name="subscribe" value="yes" id="subscribe" checked>
+                    <label for="subscribe">Send me updates and pro tips</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    Download Now
+                </button>
+            </form>
+            
+            <div class="skip-link">
+                <a href="#" onclick="downloadDirect()">Skip and download directly</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showDownloadForm(type) {
+            document.getElementById('downloadForm').style.display = 'block';
+            document.getElementById('platformInput').value = detectPlatform();
+            document.getElementById('downloadForm').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function detectPlatform() {
+            const platform = navigator.platform.toLowerCase();
+            if (platform.includes('win')) return 'windows';
+            if (platform.includes('mac')) return 'mac';
+            return 'linux';
+        }
+        
+        function downloadDirect() {
+            const platform = detectPlatform();
+            window.location.href = '/download/' + platform;
+        }
+    </script>
+</body>
+</html>

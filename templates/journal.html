@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Journal - Habit Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body {% if dark_mode %}data-theme="dark"{% endif %}>
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <h1>📔 Journal</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Dashboard</a>
+                <a href="{{ url_for('toggle_dark_mode') }}" class="dark-mode-toggle">
+                    {% if dark_mode %}☀️{% else %}🌙{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Search Bar -->
+        <div class="card" style="margin-bottom: 20px;">
+            <form method="GET" action="{{ url_for('journal') }}">
+                <input type="text" 
+                       name="search" 
+                       class="search-bar" 
+                       placeholder="🔍 Search journal entries..."
+                       value="{{ search_term }}">
+            </form>
+        </div>
+        
+        <!-- All Tags -->
+        {% if all_tags %}
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 class="card-title">Popular Tags</h3>
+                <div class="journal-entry-tags">
+                    {% for tag in all_tags %}
+                        <a href="{{ url_for('journal', search=tag) }}" style="text-decoration: none;">
+                            <span class="tag">{{ tag }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Journal Entries -->
+        <div class="card">
+            <h2 class="card-title">All Entries</h2>
+            
+            {% if entries %}
+                {% for entry in entries %}
+                    <div class="journal-entry">
+                        <div class="journal-entry-date">
+                            📅 {{ entry.entry_date }}
+                        </div>
+                        
+                        <div class="journal-entry-content">
+                            {{ entry.content }}
+                        </div>
+                        
+                        {% if entry.tags %}
+                            <div class="journal-entry-tags">
+                                {% for tag in entry.get_tags_list() %}
+                                    <span class="tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <a href="{{ url_for('delete_journal', entry_date=entry.entry_date) }}" 
+                               onclick="return confirm('Delete this entry?');" 
+                               class="btn btn-danger">Delete</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+                    {% if search_term %}
+                        No entries found for "{{ search_term }}"
+                    {% else %}
+                        No journal entries yet. Start writing on the dashboard! ✍️
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+</body>
+</html>

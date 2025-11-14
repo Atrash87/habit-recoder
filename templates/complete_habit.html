@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete Habit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body {% if dark_mode %}data-theme="dark"{% endif %}>
+    
+    <div class="header">
+        <div class="header-content">
+            <h1>Complete: {{ habit.name }}</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">← Cancel</a>
+                <a href="{{ url_for('toggle_dark_mode') }}" class="dark-mode-toggle">
+                    {% if dark_mode %}☀️{% else %}🌙{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            {% if habit.motivation %}
+                <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>💡 Remember why:</strong> {{ habit.motivation }}
+                </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('complete_habit', habit_id=habit.id) }}">
+                <div class="form-group">
+                    <label>How are you feeling?</label>
+                    <div class="mood-options">
+                        <label class="mood-label">
+                            <input type="radio" name="mood" value="happy">
+                            <span class="mood-btn">😊</span>
+                        </label>
+                        <label class="mood-label">
+                            <input type="radio" name="mood" value="neutral">
+                            <span class="mood-btn">😐</span>
+                        </label>
+                        <label class="mood-label">
+                            <input type="radio" name="mood" value="stressed">
+                            <span class="mood-btn">😰</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Add a note (optional):</label>
+                    <textarea name="note" class="form-control" placeholder="How did it go? Any thoughts?"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success btn-large">✅ Mark Complete</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary btn-large">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+</body>
+</html>

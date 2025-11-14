@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Analytics - Habit Re:coder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .export-btn {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Collection Dashboard</h1>
+        
+        <button class="export-btn" onclick="exportCSV()">Export to CSV</button>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Platform</th>
+                    <th>Subscribed</th>
+                    <th>Downloaded At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for download in downloads %}
+                <tr>
+                    <td>{{ download[0] }}</td>
+                    <td>{{ download[1] or 'Anonymous' }}</td>
+                    <td>{{ download[2] }}</td>
+                    <td>{{ 'Yes' if download[3] else 'No' }}</td>
+                    <td>{{ download[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <p style="margin-top: 20px;">
+            Total Downloads: {{ downloads|length }}
+        </p>
+    </div>
+    
+    <script>
+        function exportCSV() {
+            window.location.href = '/admin/export';
+        }
+    </script>
+</body>
+</html>

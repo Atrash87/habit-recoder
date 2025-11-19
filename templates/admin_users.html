@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - User Management - {{ app_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-hover);
+        }
+        .admin-header h1 {
+            margin: 0 0 10px 0;
+            color: white;
+        }
+        .admin-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background-color: var(--bg-card);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .users-table th {
+            background-color: var(--bg-secondary);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+        }
+        .users-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .users-table tr:hover {
+            background-color: var(--bg-secondary);
+        }
+        .users-table tr:last-child td {
+            border-bottom: none;
+        }
+        .admin-badge {
+            display: inline-block;
+            background-color: var(--warning-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body {% if dark_mode %}data-theme="dark"{% endif %}>
+    
+    <div class="header">
+        <div class="header-content">
+            <h1>🔐 Admin Panel</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Dashboard</a>
+                <a href="{{ url_for('toggle_dark_mode') }}" class="dark-mode-toggle">
+                    {% if dark_mode %}☀️{% else %}🌙{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="admin-header">
+            <h1>User Management</h1>
+            <p>Manage all registered users and export email lists</p>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ users|length }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ users|selectattr('is_admin')|list|length }}</div>
+                <div class="stat-label">Admins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ (users|length) - (users|selectattr('is_admin')|list|length) }}</div>
+                <div class="stat-label">Regular Users</div>
+            </div>
+        </div>
+        
+        <!-- Export Button -->
+        <div class="card" style="margin-bottom: 20px; text-align: center; padding: 20px;">
+            <h3 style="margin-bottom: 15px;">📧 Export User Emails</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Download a CSV file with all user email addresses and signup dates
+            </p>
+            <a href="{{ url_for('admin_export_users') }}" class="btn btn-success btn-large">
+                📥 Download User List (CSV)
+            </a>
+        </div>
+        
+        <!-- Users Table -->
+        <div class="card">
+            <h2 class="card-title" style="margin-bottom: 20px;">All Registered Users</h2>
+            
+            {% if users %}
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Signed Up</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>
+                                {{ user.email }}
+                                {% if user.id == current_user.id %}
+                                    <span style="color: var(--accent-color); font-weight: 600;">(You)</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_admin %}
+                                    <span class="admin-badge">ADMIN</span>
+                                {% else %}
+                                    User
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at }}</td>
+                            <td>
+                                <div class="action-btns">
+                                    {% if not user.is_admin or user.id != current_user.id %}
+                                        <a href="{{ url_for('admin_delete_user', user_id=user.id) }}" 
+                                           onclick="return confirm('Delete user {{ user.email }}? This will also delete all their habits and journal entries.');"
+                                           class="btn btn-danger" style="font-size: 12px; padding: 6px 12px;">
+                                            Delete
+                                        </a>
+                                    {% else %}
+                                        <span style="color: var(--text-secondary); font-size: 12px;">Protected</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+                    No users registered yet.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+</body>
+</html>

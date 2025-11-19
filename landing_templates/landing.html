@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Habit Re:coder - Transform Your Life</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: white;
+            border-radius: 30px;
+            padding: 14px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+        }
+        
+        .tagline {
+            font-size: 24px;
+            opacity: 0.95;
+            margin-bottom: 40px;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .main-card h2 {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .features {
+            list-style: none;
+            margin: 30px 0;
+            text-align: left;
+            display: inline-block;
+        }
+        
+        .features li {
+            padding: 12px 0;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 20px;
+        }
+        
+        .platform-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .email-section {
+            background: #f8f8f8;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+        
+        .email-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .email-section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .checkbox-group input {
+            margin-right: 10px;
+        }
+        
+        .skip-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .skip-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .skip-link a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+            .tagline {
+                font-size: 18px;
+            }
+            .main-card {
+                padding: 30px 20px;
+            }
+            .platform-buttons {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo.ico') }}" alt="Habit Re:coder Logo">
+            </div>
+            <h1>Habit Re:coder</h1>
+            <p class="tagline">Transform Your Life with Smart Habit Tracking</p>
+        </div>
+        
+       <!-- Tips Section -->
+<div style="background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 40px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 32px; margin-bottom: 10px; color: #333;">Quick Tips</h2>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+                <strong style="color: #333; font-size: 16px;">Do It Early in the Day</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                Completing your habit earlier reduces stress and increases consistency.
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+                <strong style="color: #333; font-size: 16px;">Start Small and Build Gradually</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                Begin with the easiest version—even two minutes—and expand over time.
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+                <strong style="color: #333; font-size: 16px;">Know Your Cue</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                Identify what triggers the habit—time, emotion, or situation—to respond intentionally.
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">4</div>
+                <strong style="color: #333; font-size: 16px;">Replace the Response</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                When a cue leads to a negative habit, substitute it with a simple positive action like walking or breathing.
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">5</div>
+                <strong style="color: #333; font-size: 16px;">Make It Convenient</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                Shape your environment to support your habits: prepare tools and remove distractions.
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">6</div>
+                <strong style="color: #333; font-size: 16px;">Track Once a Day</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                A simple daily check mark maintains awareness and personal accountability.
+            </p>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">7</div>
+                <strong style="color: #333; font-size: 16px;">Use Gentle Accountability</strong>
+            </div>
+            <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                Share your goal with someone supportive or reward yourself for steady progress.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Main Card -->
+<div class="main-card">
+    <h2>Desktop App - 100% Offline & Private</h2>
+    
+    <ul class="features">
+        <li>Works completely offline - no internet needed</li>
+        <li>Complete privacy - data stays on your computer</li>
+        <li>No account required - start using immediately</li>
+        <li>Lightning fast - no web delays</li>
+        <li>Free forever - no subscriptions</li>
+        <li>AI-ready reports for personalized insights</li>
+    </ul>
+    
+    <div class="platform-buttons">
+        <button class="btn btn-primary" onclick="downloadWindows()">
+            Download for Windows
+        </button>
+        <button class="btn btn-secondary" onclick="downloadMac()">
+            Download for Mac
+        </button>
+        <button class="btn btn-secondary" onclick="downloadLinux()">
+            Download for Linux
+        </button>
+    </div>
+
+    <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin: 30px 0;">
+        <h3 style="margin: 0 0 10px 0; color: #856404;">⚠️ Windows Smart Screen Alert</h3>
+        <p style="margin: 0; color: #856404; line-height: 1.6;">
+            Your computer may display a "Windows protected your PC" warning.
+            This happens because I am an independent developer and not part of a major software publisher.
+            <br><br>
+            <strong>To continue:</strong> Click "More info" → "Run anyway".
+            <br>
+            Your data stays fully on your device and remains completely private.
+        </p>
+    </div>
+</div>
+
+
+
+            
+            <div class="email-section" id="emailSection" style="display: none;">
+                <h3>📧 Get Download Link & Updates</h3>
+                <p>Enter your email to receive the download link (optional)</p>
+                
+                <form method="POST" action="/download" id="downloadForm">
+                    <input type="hidden" name="platform" id="platformInput" value="">
+                    <input type="email" name="email" id="emailInput" placeholder="your@email.com">
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="subscribe" value="yes" id="subscribe" checked>
+                        <label for="subscribe">Send me updates and pro tips</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        Download Now
+                    </button>
+                </form>
+                
+                <div class="skip-link">
+                    <a href="#" onclick="skipEmail(); return false;">Skip and download directly</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedPlatform = '';
+        
+        function detectPlatform() {
+            const platform = navigator.platform.toLowerCase();
+            if (platform.includes('win')) return 'windows';
+            if (platform.includes('mac')) return 'mac';
+            return 'linux';
+        }
+        
+        function showEmailForm(platform) {
+            selectedPlatform = platform;
+            document.getElementById('platformInput').value = platform;
+            document.getElementById('emailSection').style.display = 'block';
+            document.getElementById('emailSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function downloadWindows() {
+            showEmailForm('windows');
+        }
+        
+        function downloadMac() {
+            showEmailForm('mac');
+        }
+        
+        function downloadLinux() {
+            showEmailForm('linux');
+        }
+        
+        function skipEmail() {
+            // Direct download without email
+            window.location.href = '/download/' + selectedPlatform;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ habit.name }} - Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body {% if dark_mode %}data-theme="dark"{% endif %}>
+    
+    <div class="header">
+        <div class="header-content">
+            <h1>
+                {% if habit.icon %}{{ habit.icon }}{% endif %}
+                {{ habit.name }}
+            </h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back</a>
+                <a href="{{ url_for('toggle_dark_mode') }}" class="dark-mode-toggle">
+                    {% if dark_mode %}☀️{% else %}🌙{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Habit Info -->
+        <div class="card" style="margin-bottom: 20px;">
+            <p><strong>Frequency:</strong> {{ habit.frequency }}</p>
+            {% if habit.target_time %}
+                <p><strong>Target Time:</strong> {{ habit.target_time }}</p>
+            {% endif %}
+            
+            {% if habit.motivation %}
+                <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>💡 Why this matters:</strong><br>
+                    {{ habit.motivation }}
+                </div>
+            {% endif %}
+            
+            {% if habit.challenges %}
+                <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>⚠️ Expected challenges:</strong><br>
+                    {{ habit.challenges }}
+                </div>
+            {% endif %}
+            
+            {% if habit.ai_notes %}
+                <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>🤖 Questions for AI:</strong><br>
+                    {{ habit.ai_notes }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Statistics -->
+        <div class="card" style="margin-bottom: 20px;">
+            <h2 class="card-title">📊 Statistics</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="text-align: center; padding: 20px; background-color: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 32px; font-weight: bold; color: var(--warning-color);">🔥 {{ streak }}</div>
+                    <div style="color: var(--text-secondary);">Current Streak</div>
+                </div>
+                <div style="text-align: center; padding: 20px; background-color: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 32px; font-weight: bold; color: var(--success-color);">✅ {{ stats.total_completions }}</div>
+                    <div style="color: var(--text-secondary);">Total Completions</div>
+                </div>
+                <div style="text-align: center; padding: 20px; background-color: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 32px; font-weight: bold; color: var(--accent-color);">📈 {{ stats.completion_rate }}%</div>
+                    <div style="color: var(--text-secondary);">Completion Rate</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Completion History -->
+        <div class="card">
+            <h2 class="card-title">📅 Completion History</h2>
+            
+            {% if logs %}
+                {% for log in logs %}
+                    <div class="journal-entry">
+                        <div class="journal-entry-date">{{ log.completed_date }}</div>
+                        
+                        {% if log.mood %}
+                            <p style="margin: 10px 0;">
+                                <strong>Mood:</strong> 
+                                {% if log.mood == 'happy' %}😊 Happy
+                                {% elif log.mood == 'neutral' %}😐 Neutral
+                                {% elif log.mood == 'stressed' %}😰 Stressed
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                        
+                        {% if log.note %}
+                            <div class="journal-entry-content">{{ log.note }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+                    No completions yet. Start building your streak! 🚀
+                </p>
+            {% endif %}
+        </div>
+        
+        <!-- Actions -->
+        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+            <a href="{{ url_for('edit_habit', habit_id=habit.id) }}" class="btn btn-primary">Edit Habit</a>
+            <a href="{{ url_for('delete_habit_route', habit_id=habit.id) }}" 
+               onclick="return confirm('Delete this habit and all its history?');"
+               class="btn btn-danger">Delete Habit</a>
+        </div>
+    </div>
+    
+</body>
+</html>     

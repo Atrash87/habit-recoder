@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Habit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .info-banner {
+            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+        }
+        .info-banner h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .info-banner p {
+            margin: 0;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        .help-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 5px;
+        }
+        .help-icon:hover {
+            background-color: var(--success-color);
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .example-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: 8px;
+            padding-left: 10px;
+            border-left: 3px solid var(--accent-color);
+        }
+    </style>
+</head>
+<body {% if dark_mode %}data-theme="dark"{% endif %}>
+    
+    <div class="header">
+        <div class="header-content">
+            <h1>Add New Habit</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">← Cancel</a>
+                <a href="{{ url_for('toggle_dark_mode') }}" class="dark-mode-toggle">
+                    {% if dark_mode %}☀️{% else %}🌙{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <h3>💡 Your Journey to Transformation</h3>
+            <p>Everything you write here will be included in your AI analysis reports. The more context you share, the better insights and guidance you'll receive on your path to change.</p>
+        </div>
+        
+        <div class="card">
+            <form method="POST" action="{{ url_for('add_habit') }}">
+                <div class="form-group">
+                    <label>Habit Name: *</label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g., Exercise, Meditate, Read">
+                </div>
+                
+                <div class="form-group">
+                    <label>Icon (emoji):</label>
+                    <input type="text" name="icon" class="form-control" placeholder="e.g., 🏃 ✍️ 🧘 📚">
+                    <p class="help-text">Add an emoji to represent your habit visually</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Frequency: *</label>
+                    <select name="frequency" class="form-control" required>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Target Time:</label>
+                    <input type="time" name="target_time" class="form-control">
+                    <p class="help-text">When do you plan to do this habit?</p>
+                </div>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border-color);">
+                
+                <div class="form-group">
+                    <label>
+                        Why This Matters to Me:
+                        <span class="tooltip">
+                            <span class="help-icon">?</span>
+                            <span class="tooltiptext">What will change in your life when you master this habit? Think beyond the habit itself - what transformation are you seeking?</span>
+                        </span>
+                    </label>
+                    <textarea name="motivation" class="form-control" rows="4" placeholder="What transformation are you seeking?"></textarea>
+                    <div class="example-text">
+                        <strong>Examples:</strong><br>
+                        • "This is my path to financial freedom and quitting my job"<br>
+                        • "I'm building discipline so I can finally launch my business"<br>
+                        • "I want to become the confident person who speaks up in meetings"<br>
+                        • "I need this to break the cycle of anxiety"<br>
+                        • "This is how I become the role model my kids deserve"
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Expected Challenges:
+                        <span class="tooltip">
+                            <span class="help-icon">?</span>
+                            <span class="tooltiptext">Honesty helps - what actually stops you? Understanding your obstacles helps AI give you better strategies.</span>
+                        </span>
+                    </label>
+                    <textarea name="challenges" class="form-control" rows="4" placeholder="What obstacles might you face?"></textarea>
+                    <div class="example-text">
+                        <strong>Examples:</strong><br>
+                        • "I self-sabotage when things get hard - I give up after 2 weeks"<br>
+                        • "I have ADHD and lose focus easily, need strategies for this"<br>
+                        • "Deep down I don't believe I can change"<br>
+                        • "My environment doesn't support this habit"<br>
+                        • "I'm scared of success - what if I actually achieve this?"
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Additional Notes for AI:
+                        <span class="tooltip">
+                            <span class="help-icon">?</span>
+                            <span class="tooltiptext">What questions or guidance do you need? This helps AI understand how to best support your journey.</span>
+                        </span>
+                        <span style="color: var(--text-secondary); font-weight: normal; font-size: 14px;">(Optional)</span>
+                    </label>
+                    <textarea name="ai_notes" class="form-control" rows="4" placeholder="What help do you need from AI?"></textarea>
+                    <div class="example-text">
+                        <strong>Examples:</strong><br>
+                        • "Am I picking the right habit for my goal, or is there a better one?"<br>
+                        • "What complementary habits should I add to accelerate progress?"<br>
+                        • "Why do I keep failing at this? What's the real blocker?"<br>
+                        • "Is my timing wrong? Should I change my approach?"<br>
+                        • "How do successful people actually build this habit?"<br>
+                        • "What am I missing? What don't I see about myself?"
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-success btn-large">Create Habit</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary btn-large">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+</body>
+</html>

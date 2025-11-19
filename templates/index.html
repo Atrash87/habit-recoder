@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body {% if dark_mode %}data-theme="dark"{% endif %}>
+    
+    <!-- Header -->
+<!-- Header -->
+<div class="header">
+    <div class="header-content">
+        <h1>🎯 {{ app_name }}</h1>
+        <div class="nav-buttons">
+            <a href="{{ url_for('journal') }}" class="btn btn-secondary">📔 Journal</a>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin_users') }}" class="btn btn-primary">👨‍💼 Admin</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">🚪 Logout</a>
+            <a href="{{ url_for('toggle_dark_mode') }}" class="dark-mode-toggle">
+                {% if dark_mode %}☀️{% else %}🌙{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+    
+    <div class="container">
+        <!-- Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Date Display -->
+        <div class="card" style="margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; color: var(--text-primary);">{{ today }}</h2>
+        <p style="margin: 0; color: var(--text-secondary);">
+            Logged in as: <strong>{{ current_user.email }}</strong>
+        </p>
+    </div>
+</div>
+        
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Column: Habits -->
+            <div>
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Today's Progress</h2>
+                    </div>
+                    
+                    <!-- Progress Circle -->
+                    <div class="progress-circle">
+                        <svg width="120" height="120">
+                            <circle class="progress-bg" cx="60" cy="60" r="50"></circle>
+                            <circle class="progress-bar" cx="60" cy="60" r="50" 
+                                    stroke-dasharray="314" 
+                                    stroke-dashoffset="{{ 314 - (314 * completion_percentage / 100) }}"></circle>
+                        </svg>
+                        <div class="progress-text">{{ completion_percentage }}%</div>
+                    </div>
+                    
+                    <p style="text-align: center; margin-top: 15px; color: var(--text-secondary);">
+                        {{ completed_today }} of {{ total_habits }} habits completed
+                    </p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Your Habits</h2>
+                    </div>
+                    <div class="card-header">
+    <h2 class="card-title">Your Habits</h2>
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('add_habit') }}" class="btn btn-primary">+ Add Habit</a>
+        <a href="{{ url_for('generate_report') }}" class="btn btn-success">📊 Generate AI Report</a>
+    </div>
+</div>
+                    
+                    {% if habits_data %}
+                        {% for item in habits_data %}
+                            <div class="habit-card {% if item.completed_today %}completed{% endif %}">
+                                <div class="habit-header">
+                                    <div>
+                                        <div class="habit-name">
+                                            {% if item.habit.icon %}
+                                                <span class="habit-icon">{{ item.habit.icon }}</span>
+                                            {% endif %}
+                                            {{ item.habit.name }}
+                                        </div>
+                                        <div class="habit-info">
+                                            <strong>Frequency:</strong> {{ item.habit.frequency }}
+                                            {% if item.habit.target_time %}
+                                                • <strong>Time:</strong> {{ item.habit.target_time }}
+                                            {% endif %}
+                                        </div>
+                                        {% if item.habit.motivation %}
+                                            <div class="habit-info">
+                                                💡 {{ item.habit.motivation }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="streak">🔥 {{ item.streak }} day streak</div>
+                                
+                                <div class="habit-actions">
+                                    {% if item.completed_today %}
+                                        <span class="btn btn-success" style="cursor: default;">✅ Completed</span>
+                                    {% else %}
+                                        <a href="{{ url_for('complete_habit', habit_id=item.habit.id) }}" class="btn btn-success">Mark Done</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('view_habit', habit_id=item.habit.id) }}" class="btn btn-secondary">View Details</a>
+                                    <a href="{{ url_for('delete_habit_route', habit_id=item.habit.id) }}" 
+                                       onclick="return confirm('Delete this habit?');" 
+                                       class="btn btn-danger">Delete</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+                            No habits yet. Click "Add Habit" to get started! 🚀
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Right Column: Journal Widget -->
+            <div>
+                <div class="journal-widget">
+                    <h2 class="card-title" style="margin-bottom: 15px;">📝 Today's Journal</h2>
+                    
+                    <form method="POST" action="{{ url_for('save_journal') }}">
+                        <input type="hidden" name="entry_date" value="{{ today_date }}">
+                        <input type="hidden" name="from_dashboard" value="true">
+                        
+                        <textarea name="content" class="journal-textarea" 
+                                  placeholder="How was your day? What are you grateful for?">{% if journal_entry %}{{ journal_entry.content }}{% endif %}</textarea>
+                        
+                        <input type="text" name="tags" class="journal-tags" 
+                               placeholder="Tags: grateful, productive, tired (comma-separated)"
+                               value="{% if journal_entry %}{{ journal_entry.tags }}{% endif %}">
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                            {% if journal_entry %}Update Entry{% else %}Save Entry{% endif %}
+                        </button>
+                    </form>
+                    
+                    <a href="{{ url_for('journal') }}" class="btn btn-secondary" style="width: 100%; margin-top: 10px; text-align: center;">
+                        View All Entries
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>

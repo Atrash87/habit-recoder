@@ -1,4 +1,4 @@
-# 🎯 Habit Re:coder
+#  Habit Re:coder
 
 Transform your life with smart habit tracking.
 

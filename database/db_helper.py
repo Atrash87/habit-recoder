@@ -19,9 +19,21 @@ def get_connection():
         conn = psycopg2.connect(database_url)
         return conn
     else:
-        # Using SQLite locally
+        # Using SQLite locally - FIXED: Ensure directory exists
+        database_dir = os.path.dirname(DATABASE_PATH)
+        if not os.path.exists(database_dir):
+            os.makedirs(database_dir, exist_ok=True)
+            print(f"📁 Created database directory: {database_dir}")
+        
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
+        
+        # Enable foreign keys
+        conn.execute("PRAGMA foreign_keys = ON")
+        
+        print(f"🔗 Database connected: {DATABASE_PATH}")
+        print(f"🔗 Database file exists: {os.path.exists(DATABASE_PATH)}")
+        
         return conn
 
 def init_db():
@@ -29,7 +41,7 @@ def init_db():
     database_url = os.environ.get('DATABASE_URL')
     
     if database_url:
-        # PostgreSQL initialization
+        # PostgreSQL initialization (for web version)
         import psycopg2
         
         if database_url.startswith('postgres://'):
@@ -100,9 +112,18 @@ def init_db():
         print("PostgreSQL database initialized successfully!")
         
     else:
-        # SQLite initialization (local development)
+        # SQLite initialization (local development/desktop) - FIXED
+        # Ensure directory exists first
+        database_dir = os.path.dirname(DATABASE_PATH)
+        if not os.path.exists(database_dir):
+            os.makedirs(database_dir, exist_ok=True)
+            print(f"📁 Created database directory: {database_dir}")
+        
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
+        
+        # Enable foreign keys
+        cursor.execute("PRAGMA foreign_keys = ON")
         
         # Create users table
         cursor.execute('''
@@ -162,7 +183,14 @@ def init_db():
         ''')
         
         conn.commit()
+        
+        # Verify tables were created
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = cursor.fetchall()
+        print(f"📊 Database tables created: {[table[0] for table in tables]}")
+        
         conn.close()
-        print("SQLite database initialized successfully!")
+        print(f"✅ SQLite database initialized successfully at: {DATABASE_PATH}")
+        print(f"✅ Database file size: {os.path.getsize(DATABASE_PATH) if os.path.exists(DATABASE_PATH) else 0} bytes")
     
     print(f"Admin email: {ADMIN_EMAIL}")

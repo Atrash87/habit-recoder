@@ -6,182 +6,335 @@ from controllers.journal_controller import get_all_journal_entries, get_all_tags
 from datetime import datetime, timedelta
 from collections import Counter
 
+def debug_check():
+    """Temporary debug function to check if everything is working"""
+    print("=== DEBUG: report_controller is loaded correctly ===")
+    print(f"generate_report_data function: {generate_report_data}")
+    print(f"format_report_as_text function: {format_report_as_text}")
+
 def generate_report_data(user_id, start_date=None, end_date=None):
-    """Generate comprehensive report data for AI analysis"""
+    """Generate robust report data for AI analysis - handles empty data gracefully"""
     
-    if not end_date:
-        end_date = datetime.now().date()
-    if not start_date:
-        start_date = end_date - timedelta(days=30)  # Default to last 30 days
-    
-    habits = get_all_habits(user_id)  # Pass user_id here
-    report_data = {
-        'generated_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'period': f"{start_date} to {end_date}",
-        'habits': [],
-        'overall_stats': {},
-        'patterns': {},
-        'journal_insights': {}
-    }
-    
-    # Overall statistics
-    total_habits = len(habits)
-    total_completions = 0
-    total_possible = 0
-    all_streaks = []
-    completed_today_count = 0
-    
-    # Day of week analysis
-    day_completions = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}  # Monday = 0
-    day_totals = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
-    
-    # Mood analysis
-    mood_counts = {'happy': 0, 'neutral': 0, 'stressed': 0}
-    
-    # Process each habit
-    for habit in habits:
-        logs = get_habit_logs(habit.id)
-        stats = get_completion_stats(habit.id)
-        streak = get_habit_streak(habit.id)
+    try:
+        print(f"DEBUG: Starting report generation for user {user_id}")
         
-        # Filter logs by date range
-        filtered_logs = [
-            log for log in logs 
-            if start_date <= datetime.strptime(log.completed_date, '%Y-%m-%d').date() <= end_date
-        ]
+        if not end_date:
+            end_date = datetime.now().date()
+        if not start_date:
+            start_date = end_date - timedelta(days=30)
+
+        print(f"DEBUG: Date range: {start_date} to {end_date}")
+
+        # Safely get habits
+        try:
+            print("DEBUG: Attempting to get habits...")
+            habits = get_all_habits(user_id) or []
+            print(f"DEBUG: Retrieved {len(habits)} habits")
+        except Exception as e:
+            print(f"DEBUG: Error getting habits: {str(e)}")
+            habits = []
+
+        report_data = {
+            'generated_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'period': f"{start_date} to {end_date}",
+            'habits': [],
+            'overall_stats': {},
+            'patterns': {},
+            'mood_analysis': {},
+            'journal_insights': {},
+            'journal_entries': []  # ADDED: Ensure this key exists
+        }
+
+             # If no habits, return minimal report WITH journal data
+        if not habits:
+            print("DEBUG: No habits found, but checking for journal entries...")
+            
+            # Get journal entries even if no habits exist
+            try:
+                journal_entries = get_all_journal_entries(user_id) or []
+                filtered_journal = []
+                for entry in journal_entries:
+                    try:
+                        entry_date = datetime.strptime(entry.entry_date, '%Y-%m-%d').date()
+                        if start_date <= entry_date <= end_date:
+                            filtered_journal.append(entry)
+                    except:
+                        continue
+                
+                # Include journal entries in report data
+                journal_entries_data = []
+                for entry in filtered_journal:
+                    journal_entries_data.append({
+                        'date': entry.entry_date,
+                        'content': entry.content,
+                        'tags': entry.tags
+                    })
+                
+                report_data['journal_entries'] = journal_entries_data
+                journal_count = len(filtered_journal)
+                print(f"DEBUG: Found {journal_count} journal entries without habits")
+            except Exception as e:
+                print(f"DEBUG: Error getting journal entries without habits: {e}")
+                journal_count = 0
+                report_data['journal_entries'] = []
+            
+            report_data['overall_stats'] = {
+                'total_habits': 0,
+                'total_completions': 0,
+                'overall_completion_rate': 0,
+                'average_streak': 0,
+                'longest_streak': 0,
+                'completed_today': 0
+            }
+            report_data['patterns'] = {
+                'day_performance': {day: 0 for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']},
+                'best_days': ['Not enough data yet'],
+                'worst_days': ['Not enough data yet']
+            }
+            report_data['mood_analysis'] = {
+                'happy': 0,
+                'neutral': 0,
+                'stressed': 0,
+                'most_common': 'N/A'
+            }
+            report_data['journal_insights'] = {
+                'total_entries': journal_count,
+                'most_common_tags': ['None'] if journal_count == 0 else ["Check journal entries"],
+                'all_tags': []
+            }
+            return report_data
+
+        # Continue with the actual logic for when there are habits...
+        total_completions = 0
+        total_possible = 0
+        all_streaks = []
+        completed_today_count = 0
+
+        day_completions = {i: 0 for i in range(7)}
+        day_totals = {i: 0 for i in range(7)}
+        mood_counts = {'happy': 0, 'neutral': 0, 'stressed': 0}
+
+        for habit in habits:
+            try:
+                print(f"DEBUG: Processing habit: {getattr(habit, 'name', 'Unnamed')}")
+                logs = get_habit_logs(habit.id) or []
+                stats = get_completion_stats(habit.id) or {'total_completions': 0}
+                streak = get_habit_streak(habit.id) or 0
+                print(f"DEBUG: Habit {habit.id} - logs: {len(logs)}, streak: {streak}")
+            except Exception as e:
+                print(f"DEBUG: Error processing habit {getattr(habit, 'id', 'unknown')}: {str(e)}")
+                logs = []
+                stats = {'total_completions': 0}
+                streak = 0
+
+            # Filter logs safely
+            filtered_logs = []
+            for log in logs:
+                try:
+                    log_date = datetime.strptime(log.completed_date, '%Y-%m-%d').date()
+                    if start_date <= log_date <= end_date:
+                        filtered_logs.append(log)
+                except:
+                    continue
+
+            completions_in_period = len(filtered_logs)
+            days_in_period = max((end_date - start_date).days + 1, 1)
+            completion_rate = (completions_in_period / days_in_period * 100) if days_in_period else 0
+
+            # Count moods safely
+            for log in filtered_logs:
+                if hasattr(log, 'mood') and log.mood and log.mood in mood_counts:
+                    mood_counts[log.mood] += 1
+
+            # Day of week completions
+            for log in filtered_logs:
+                try:
+                    log_date = datetime.strptime(log.completed_date, '%Y-%m-%d').date()
+                    day_completions[log_date.weekday()] += 1
+                except:
+                    continue
+
+            # Day totals - FIXED: Count each day for each habit
+            current_date = start_date
+            while current_date <= end_date:
+                day_totals[current_date.weekday()] += 1  # Each day counts for each habit
+                current_date += timedelta(days=1)
+
+            total_completions += completions_in_period
+            total_possible += days_in_period
+            all_streaks.append(streak)
+            
+            try:
+                if is_completed_today(habit.id):
+                    completed_today_count += 1
+            except:
+                pass
+
+            # Add habit safely
+            report_data['habits'].append({
+                'name': getattr(habit, 'name', 'Unnamed Habit'),
+                'icon': getattr(habit, 'icon', '') or '',
+                'frequency': getattr(habit, 'frequency', 'Not set'),
+                'target_time': getattr(habit, 'target_time', 'Not set') or 'Not set',
+                'motivation': getattr(habit, 'motivation', '') or '',
+                'challenges': getattr(habit, 'challenges', '') or '',
+                'ai_notes': getattr(habit, 'ai_notes', '') or '',
+                'completions': f"{completions_in_period}/{days_in_period}",
+                'completion_rate': round(completion_rate, 1),
+                'current_streak': streak,
+                'total_completions': stats.get('total_completions', 0)
+            })
+
+        # Overall stats - FIXED: Safe calculations
+        try:
+            overall_completion_rate = (total_completions / total_possible * 100) if total_possible else 0
+        except:
+            overall_completion_rate = 0
+            
+        try:
+            average_streak = (sum(all_streaks) / len(all_streaks)) if all_streaks else 0
+        except:
+            average_streak = 0
+            
+        try:
+            longest_streak = max(all_streaks) if all_streaks else 0
+        except:
+            longest_streak = 0
+
+        report_data['overall_stats'] = {
+            'total_habits': len(habits),
+            'total_completions': total_completions,
+            'overall_completion_rate': round(overall_completion_rate, 1),
+            'average_streak': round(average_streak, 1),
+            'longest_streak': longest_streak,
+            'completed_today': completed_today_count
+        }
+
+        # Day patterns - FIXED: Safe calculations
+        day_names = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+        day_performance = {}
+        for i in range(7):
+            if day_totals[i] > 0:
+                day_performance[day_names[i]] = round((day_completions[i] / day_totals[i] * 100), 1)
+            else:
+                day_performance[day_names[i]] = 0
         
-        completions_in_period = len(filtered_logs)
-        days_in_period = (end_date - start_date).days + 1
-        completion_rate = (completions_in_period / days_in_period * 100) if days_in_period > 0 else 0
+        sorted_days = sorted(day_performance.items(), key=lambda x: x[1], reverse=True)
         
-        # Count moods
-        for log in filtered_logs:
-            if log.mood:
-                mood_counts[log.mood] = mood_counts.get(log.mood, 0) + 1
+        if total_completions > 0:
+            best_days = [f"{day} ({rate}%)" for day, rate in sorted_days[:2]]
+            worst_days = [f"{day} ({rate}%)" for day, rate in sorted_days[-2:]]
+        else:
+            best_days = ["Not enough data yet - complete more habits!"]
+            worst_days = ["Keep tracking to see patterns"]
         
-        # Day of week pattern
-        for log in logs:
-            log_date = datetime.strptime(log.completed_date, '%Y-%m-%d').date()
-            day_of_week = log_date.weekday()
-            day_completions[day_of_week] += 1
+        report_data['patterns'] = {
+            'day_performance': day_performance,
+            'best_days': best_days,
+            'worst_days': worst_days
+        }
+
+        # Mood analysis - FIXED: Safe calculations
+        total_moods = sum(mood_counts.values())
+        if total_moods > 0:
+            mood_percentages = {k: round((v / total_moods) * 100, 1) for k, v in mood_counts.items()}
+            most_common = max(mood_counts, key=mood_counts.get)
+        else:
+            mood_percentages = {'happy': 0, 'neutral': 0, 'stressed': 0}
+            most_common = 'N/A - Add mood data when completing habits'
         
-        # Calculate day totals
-        current_date = start_date
-        while current_date <= end_date:
-            day_totals[current_date.weekday()] += 1
-            current_date += timedelta(days=1)
+        report_data['mood_analysis'] = {
+            **mood_percentages,
+            'most_common': most_common
+        }
+
+        # Journal insights - FIXED: Include actual entries
+        try:
+            journal_entries = get_all_journal_entries(user_id) or []
+            print(f"DEBUG: Found {len(journal_entries)} total journal entries")
+        except Exception as e:
+            print(f"DEBUG: Error getting journal entries: {e}")
+            journal_entries = []
         
-        total_completions += completions_in_period
-        total_possible += days_in_period
-        all_streaks.append(streak)
+        filtered_journal = []
+        for entry in journal_entries:
+            try:
+                entry_date = datetime.strptime(entry.entry_date, '%Y-%m-%d').date()
+                if start_date <= entry_date <= end_date:
+                    filtered_journal.append(entry)
+                    print(f"DEBUG: Added journal entry for {entry_date}")
+            except Exception as e:
+                print(f"DEBUG: Error processing journal entry date: {e}")
+                continue
         
-        if is_completed_today(habit.id):
-            completed_today_count += 1
+        print(f"DEBUG: {len(filtered_journal)} journal entries in date range")
         
-        # Find best time of day
-        best_time = "Not set"
-        if habit.target_time:
-            best_time = habit.target_time
+        try:
+            all_journal_tags = get_all_tags(user_id) or []
+        except:
+            all_journal_tags = []
+
+        tag_usage = []
+        for entry in filtered_journal:
+            if hasattr(entry, 'tags') and entry.tags:
+                tags_list = [t.strip() for t in entry.tags.split(',')]
+                tag_usage.extend(tags_list)
+                print(f"DEBUG: Found tags: {tags_list}")
         
-        habit_data = {
-            'name': habit.name,
-            'icon': habit.icon or '',
-            'frequency': habit.frequency,
-            'target_time': habit.target_time or 'Not set',
-            'motivation': habit.motivation or '',
-            'challenges': habit.challenges or '',
-            'ai_notes': habit.ai_notes or '',
-            'completions': f"{completions_in_period}/{days_in_period}",
-            'completion_rate': round(completion_rate, 1),
-            'current_streak': streak,
-            'total_completions': stats['total_completions'],
-            'best_time': best_time
+        tag_counter = Counter(tag_usage)
+        most_common_tags = tag_counter.most_common(5)
+        print(f"DEBUG: Most common tags: {most_common_tags}")
+
+        # ENHANCED: Include actual journal entries in report data
+        journal_entries_data = []
+        for entry in filtered_journal:
+            try:
+                journal_entries_data.append({
+                    'date': entry.entry_date,
+                    'content': entry.content,
+                    'tags': entry.tags
+                })
+                print(f"DEBUG: Added journal content for {entry.entry_date}")
+            except Exception as e:
+                print(f"DEBUG: Error adding journal entry to report: {e}")
+                continue
+        
+        report_data['journal_insights'] = {
+            'total_entries': len(filtered_journal),
+            'most_common_tags': [f"{tag} ({count})" for tag, count in most_common_tags] if most_common_tags else ["No journal entries yet"],
+            'all_tags': all_journal_tags
         }
         
-        report_data['habits'].append(habit_data)
-    
-    # Calculate overall stats
-    overall_completion_rate = (total_completions / total_possible * 100) if total_possible > 0 else 0
-    average_streak = sum(all_streaks) / len(all_streaks) if all_streaks else 0
-    longest_streak = max(all_streaks) if all_streaks else 0
-    
-    report_data['overall_stats'] = {
-        'total_habits': total_habits,
-        'total_completions': total_completions,
-        'overall_completion_rate': round(overall_completion_rate, 1),
-        'average_streak': round(average_streak, 1),
-        'longest_streak': longest_streak,
-        'completed_today': completed_today_count
-    }
-    
-    # Day of week patterns
-    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    day_performance = {}
-    for day_num, day_name in enumerate(day_names):
-        if day_totals[day_num] > 0:
-            rate = (day_completions[day_num] / day_totals[day_num]) * 100
-            day_performance[day_name] = round(rate, 1)
-        else:
-            day_performance[day_name] = 0
-    
-    # Find best and worst days
-    sorted_days = sorted(day_performance.items(), key=lambda x: x[1], reverse=True)
-    best_days = [f"{day} ({rate}%)" for day, rate in sorted_days[:2]]
-    worst_days = [f"{day} ({rate}%)" for day, rate in sorted_days[-2:]]
-    
-    report_data['patterns'] = {
-        'day_performance': day_performance,
-        'best_days': best_days,
-        'worst_days': worst_days
-    }
-    
-    # Mood analysis
-    total_moods = sum(mood_counts.values())
-    mood_percentages = {}
-    if total_moods > 0:
-        for mood, count in mood_counts.items():
-            mood_percentages[mood] = round((count / total_moods) * 100, 1)
-    
-    report_data['mood_analysis'] = {
-        'happy': mood_percentages.get('happy', 0),
-        'neutral': mood_percentages.get('neutral', 0),
-        'stressed': mood_percentages.get('stressed', 0),
-        'most_common': max(mood_counts, key=mood_counts.get) if total_moods > 0 else 'N/A'
-    }
-    
-    # Journal insights
-    journal_entries = get_all_journal_entries()
-    
-    # Filter journal entries by date range
-    filtered_journal = [
-        entry for entry in journal_entries
-        if start_date <= datetime.strptime(entry.entry_date, '%Y-%m-%d').date() <= end_date
-    ]
-    
-    all_journal_tags = get_all_tags()
-    
-    # Count tag usage
-    tag_usage = []
-    for entry in filtered_journal:
-        if entry.tags:
-            tags = [tag.strip() for tag in entry.tags.split(',')]
-            tag_usage.extend(tags)
-    
-    tag_counter = Counter(tag_usage)
-    most_common_tags = tag_counter.most_common(5)
-    
-    report_data['journal_insights'] = {
-        'total_entries': len(filtered_journal),
-        'most_common_tags': [f"{tag} ({count})" for tag, count in most_common_tags],
-        'all_tags': all_journal_tags
-    }
-    
-    return report_data
+        # ADDED: Include the actual journal entries for the report
+        report_data['journal_entries'] = journal_entries_data
+        print(f"DEBUG: Final journal entries in report: {len(journal_entries_data)}")
 
+        print("DEBUG: Report generation completed successfully")
+        return report_data
+        
+    except Exception as e:
+        print(f"DEBUG: CRITICAL ERROR in generate_report_data: {str(e)}")
+        # Return a basic error report that won't break format_report_as_text
+        return {
+            'generated_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'period': 'Error period',
+            'habits': [],
+            'overall_stats': {
+                'total_habits': 0,
+                'total_completions': 0,
+                'overall_completion_rate': 0,
+                'average_streak': 0,
+                'longest_streak': 0,
+                'completed_today': 0
+            },
+            'patterns': {},
+            'mood_analysis': {},
+            'journal_insights': {},
+            'journal_entries': []
+        }
 
 def format_report_as_text(report_data):
-    """Format report data as a text file with AI prompt"""
-    
+    """Convert report data dictionary into a safe, readable text with AI prompt"""
     lines = []
     
     # Header
@@ -204,62 +357,111 @@ def format_report_as_text(report_data):
     lines.append(f"Completed Today: {stats['completed_today']}/{stats['total_habits']}")
     lines.append("")
     
-    # Detailed Habit Breakdown
-    lines.append("📊 DETAILED HABIT BREAKDOWN")
-    lines.append("─" * 70)
-    for idx, habit in enumerate(report_data['habits'], 1):
+    # Check if just starting out
+    if stats['total_completions'] == 0:
+        lines.append("🌟 JUST GETTING STARTED!")
+        lines.append("─" * 70)
+        lines.append("You're at the beginning of your journey - exciting!")
+        lines.append("Complete a few more habits to generate detailed insights.")
+        lines.append("Keep going - consistency is key! 💪")
         lines.append("")
-        lines.append(f"{idx}. {habit['icon']} {habit['name']}")
-        lines.append(f"   Frequency: {habit['frequency']}")
-        lines.append(f"   Target Time: {habit['target_time']}")
-        lines.append(f"   Completions: {habit['completions']} ({habit['completion_rate']}%)")
-        lines.append(f"   Current Streak: {habit['current_streak']} days")
-        lines.append(f"   Total All-Time Completions: {habit['total_completions']}")
-        
-        if habit['motivation']:
-            lines.append(f"   ")
-            lines.append(f"   💡 Why it matters: {habit['motivation']}")
-        
-        if habit['challenges']:
-            lines.append(f"   ⚠️  Challenges: {habit['challenges']}")
-        
-        if habit['ai_notes']:
-            lines.append(f"   🤖 Questions for AI: {habit['ai_notes']}")
+    elif stats['total_completions'] < 5:
+        lines.append("🌱 BUILDING MOMENTUM!")
+        lines.append("─" * 70)
+        lines.append("Great start! Keep completing habits to see deeper patterns.")
+        lines.append("After a week of tracking, you'll get much richer insights.")
+        lines.append("")
     
-    lines.append("")
-    lines.append("")
+    # Detailed Habit Breakdown
+    if report_data['habits']:
+        lines.append("📊 DETAILED HABIT BREAKDOWN")
+        lines.append("─" * 70)
+        for idx, habit in enumerate(report_data['habits'], 1):
+            lines.append("")
+            lines.append(f"{idx}. {habit['icon']} {habit['name']}")
+            lines.append(f"   Frequency: {habit['frequency']}")
+            lines.append(f"   Target Time: {habit['target_time']}")
+            lines.append(f"   Completions: {habit['completions']} ({habit['completion_rate']}%)")
+            lines.append(f"   Current Streak: {habit['current_streak']} days")
+            lines.append(f"   Total All-Time Completions: {habit['total_completions']}")
+            
+            if habit['motivation']:
+                lines.append(f"   ")
+                lines.append(f"   💡 Why it matters: {habit['motivation']}")
+            
+            if habit['challenges']:
+                lines.append(f"   ⚠️  Challenges: {habit['challenges']}")
+            
+            if habit['ai_notes']:
+                lines.append(f"   🤖 Questions for AI: {habit['ai_notes']}")
+        
+        lines.append("")
+        lines.append("")
     
-    # Mood Analysis
-    lines.append("🎭 MOOD ANALYSIS")
-    lines.append("─" * 70)
+    # Mood Analysis (only if there's data)
     mood = report_data['mood_analysis']
-    lines.append(f"Happy: {mood['happy']}%")
-    lines.append(f"Neutral: {mood['neutral']}%")
-    lines.append(f"Stressed: {mood['stressed']}%")
-    lines.append(f"Most Common Mood: {mood['most_common']}")
-    lines.append("")
+    if mood.get('happy', 0) + mood.get('neutral', 0) + mood.get('stressed', 0) > 0:
+        lines.append("🎭 MOOD ANALYSIS")
+        lines.append("─" * 70)
+        lines.append(f"Happy: {mood['happy']}%")
+        lines.append(f"Neutral: {mood['neutral']}%")
+        lines.append(f"Stressed: {mood['stressed']}%")
+        lines.append(f"Most Common Mood: {mood['most_common']}")
+        lines.append("")
     
-    # Weekly Patterns
-    lines.append("📅 WEEKLY PATTERNS")
-    lines.append("─" * 70)
-    patterns = report_data['patterns']
-    lines.append("Performance by Day:")
-    for day, rate in patterns['day_performance'].items():
-        lines.append(f"  {day}: {rate}%")
-    lines.append("")
-    lines.append(f"Best Days: {', '.join(patterns['best_days'])}")
-    lines.append(f"Struggle Days: {', '.join(patterns['worst_days'])}")
-    lines.append("")
+    # Weekly Patterns (only if there's data)
+    if stats['total_completions'] >= 3:
+        lines.append("📅 WEEKLY PATTERNS")
+        lines.append("─" * 70)
+        lines.append("Performance by Day:")
+        for day, rate in report_data['patterns']['day_performance'].items():
+            lines.append(f"  {day}: {rate}%")
+        lines.append("")
+        lines.append(f"Best Days: {', '.join(report_data['patterns']['best_days'])}")
+        lines.append(f"Struggle Days: {', '.join(report_data['patterns']['worst_days'])}")
+        lines.append("")
     
-    # Journal Insights
-    lines.append("📝 JOURNAL INSIGHTS")
-    lines.append("─" * 70)
+    # Journal Insights - FIXED: Show actual content
     journal = report_data['journal_insights']
-    lines.append(f"Total Journal Entries: {journal['total_entries']}")
-    if journal['most_common_tags']:
-        lines.append(f"Most Common Tags: {', '.join(journal['most_common_tags'])}")
-    lines.append("")
-    lines.append("")
+    if journal['total_entries'] > 0:
+        lines.append("📝 JOURNAL INSIGHTS")
+        lines.append("─" * 70)
+        lines.append(f"Total Journal Entries: {journal['total_entries']}")
+        
+        # Show most common tags if available
+        if journal['most_common_tags'] and journal['most_common_tags'][0] != "No journal entries yet":
+            lines.append(f"Most Common Tags: {', '.join(journal['most_common_tags'])}")
+        
+        # Show recent journal entries
+        lines.append("")
+        lines.append("📖 RECENT JOURNAL ENTRIES:")
+        lines.append("")
+        
+        # Get the actual journal entries from report_data
+        if 'journal_entries' in report_data and report_data['journal_entries']:
+            # Show entries in reverse chronological order (newest first)
+            sorted_entries = sorted(report_data['journal_entries'], 
+                                  key=lambda x: x['date'], 
+                                  reverse=True)[:5]  # Show last 5 entries
+            
+            for entry in sorted_entries:
+                lines.append(f"📅 {entry['date']}:")
+                # Show the full content (you can limit length if needed)
+                content = entry['content']
+                # Split content into lines for better formatting
+                content_lines = content.split('\n')
+                for line in content_lines:
+                    if line.strip():  # Only show non-empty lines
+                        lines.append(f"   {line}")
+                
+                if entry.get('tags') and entry['tags'].strip():
+                    lines.append(f"   🏷️  Tags: {entry['tags']}")
+                lines.append("")  # Empty line between entries
+        else:
+            lines.append("   No journal content available in the selected date range.")
+            lines.append("   Try adjusting the report period to include your journal entries.")
+        
+        lines.append("")
     
     # AI Prompt Section
     lines.append("═" * 70)
@@ -272,113 +474,66 @@ def format_report_as_text(report_data):
     lines.append("")
     
     # AI Prompt
-    ai_prompt = f"""You are a transformational habit coach and behavioral psychologist specializing in life change. This person isn't just tracking habits - they're trying to change their life trajectory.
-
-Your role:
-1. Be honest and insightful (not just encouraging)
-2. Question their approach if needed
-3. Suggest better habits if theirs won't achieve their goals
-4. Identify blind spots and self-sabotage patterns
-5. Recommend complementary habits that accelerate transformation
-6. Give hard truths when needed (with compassion)
-
-Analyze this data and provide:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-PART 1: STRATEGIC ASSESSMENT
-- Are they tracking the RIGHT habits for their goals?
-- Is something missing that would accelerate progress?
-- Are there misaligned priorities?
-
-PART 2: DEEP PATTERN ANALYSIS
-- What psychological patterns emerge from their data?
-- Where is self-sabotage showing up?
-- What do completion patterns reveal about their personality?
-
-PART 3: THE HARD TRUTHS
-- What are they avoiding that they need to hear?
-- Where are they lying to themselves?
-- What fundamental shift is needed?
-
-PART 4: COMPLEMENTARY HABITS
-- What 2-3 habits should they ADD to amplify results?
-- What habit stacks would create momentum?
-- What keystone habit would unlock everything else?
-
-PART 5: SPECIFIC INTERVENTIONS
-- For each struggling habit: WHY it's failing (real reason)
-- Specific strategy changes (not generic advice)
-- Timeline: What to expect week-by-week
-
-PART 6: TRANSFORMATION ROADMAP
-- Where will they be in 90 days if they continue current path?
-- What needs to change to reach their actual goal?
-- The ONE thing that would change everything
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-MY DATA:
-
-PERIOD ANALYZED: {report_data['period']}
-
-OVERALL PERFORMANCE:
-- Total Habits: {stats['total_habits']}
-- Completion Rate: {stats['overall_completion_rate']}%
-- Longest Streak: {stats['longest_streak']} days
-- Average Streak: {stats['average_streak']} days
-
-HABITS I'M TRACKING:
-"""
+    lines.append("You are a transformational habit coach. Analyze this habit data and provide:")
+    lines.append("")
+    lines.append("1. KEY INSIGHTS: What patterns do you see?")
+    lines.append("2. STRENGTHS: What is working well?")
+    lines.append("3. IMPROVEMENTS: Where can I do better?")
+    lines.append("4. RECOMMENDATIONS: 3-5 specific, actionable steps")
+    lines.append("5. HABIT SUGGESTIONS: What complementary habits would help?")
+    lines.append("")
+    lines.append("MY DATA:")
+    lines.append("")
+    lines.append(f"Period: {report_data['period']}")
+    lines.append(f"Total Habits: {stats['total_habits']}")
+    lines.append(f"Completion Rate: {stats['overall_completion_rate']}%")
+    lines.append(f"Longest Streak: {stats['longest_streak']} days")
+    lines.append("")
     
-    lines.append(ai_prompt)
-    
-    # Add each habit with full context
-    for idx, habit in enumerate(report_data['habits'], 1):
+    if report_data['habits']:
+        lines.append("HABITS I'M TRACKING:")
         lines.append("")
-        lines.append(f"{idx}. {habit['icon']} {habit['name']}")
-        lines.append(f"   Completion Rate: {habit['completion_rate']}%")
-        lines.append(f"   Current Streak: {habit['current_streak']} days")
-        lines.append(f"   Target Time: {habit['target_time']}")
-        
-        if habit['motivation']:
-            lines.append(f"   ")
-            lines.append(f"   Why it matters: \"{habit['motivation']}\"")
-        
-        if habit['challenges']:
-            lines.append(f"   Expected challenges: \"{habit['challenges']}\"")
-        
-        if habit['ai_notes']:
-            lines.append(f"   Questions for AI: \"{habit['ai_notes']}\"")
+        for idx, habit in enumerate(report_data['habits'], 1):
+            lines.append(f"{idx}. {habit['icon']} {habit['name']}")
+            lines.append(f"   Completion Rate: {habit['completion_rate']}%")
+            lines.append(f"   Current Streak: {habit['current_streak']} days")
+            if habit['motivation']:
+                lines.append(f"   Why: \"{habit['motivation']}\"")
+            if habit['challenges']:
+                lines.append(f"   Challenges: \"{habit['challenges']}\"")
+            if habit['ai_notes']:
+                lines.append(f"   Questions: \"{habit['ai_notes']}\"")
+            lines.append("")
     
-    lines.append("")
-    lines.append("PERFORMANCE PATTERNS:")
-    lines.append(f"• Best Days: {', '.join(patterns['best_days'])}")
-    lines.append(f"• Struggle Days: {', '.join(patterns['worst_days'])}")
-    lines.append("")
-    
-    lines.append("EMOTIONAL PATTERNS:")
-    lines.append(f"• Happy: {mood['happy']}% of completions")
-    lines.append(f"• Neutral: {mood['neutral']}% of completions")
-    lines.append(f"• Stressed: {mood['stressed']}% of completions")
-    lines.append(f"• Most common mood: {mood['most_common']}")
-    lines.append("")
-    
-    if journal['most_common_tags']:
-        lines.append("JOURNAL THEMES:")
-        lines.append(f"• Total journal entries: {journal['total_entries']}")
-        lines.append(f"• Common themes: {', '.join(journal['most_common_tags'])}")
+    if stats['total_completions'] >= 3:
+        lines.append("PATTERNS:")
+        lines.append(f"Best Days: {', '.join(report_data['patterns']['best_days'])}")
+        lines.append(f"Struggle Days: {', '.join(report_data['patterns']['worst_days'])}")
         lines.append("")
     
-    lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    lines.append("")
-    lines.append("Please provide thorough, honest, and insightful analysis.")
-    lines.append("I need real guidance, not generic motivation.")
-    lines.append("Tell me what I'm not seeing about myself and my journey.")
+    if mood.get('happy', 0) + mood.get('neutral', 0) + mood.get('stressed', 0) > 0:
+        lines.append("MOOD TRENDS:")
+        lines.append(f"Happy: {mood['happy']}%, Neutral: {mood['neutral']}%, Stressed: {mood['stressed']}%")
+        lines.append("")
+    
+    # ADDED: Journal content in AI prompt
+    if 'journal_entries' in report_data and report_data['journal_entries']:
+        lines.append("MY JOURNAL ENTRIES:")
+        lines.append("")
+        # Sort by date (oldest first for context)
+        sorted_entries = sorted(report_data['journal_entries'], key=lambda x: x['date'])
+        for entry in sorted_entries:
+            lines.append(f"Date: {entry['date']}")
+            lines.append(f"Content: {entry['content']}")
+            if entry.get('tags') and entry['tags'].strip():
+                lines.append(f"Tags: {entry['tags']}")
+            lines.append("")  # Empty line between entries
+        lines.append("")
+    
+    lines.append("Please provide specific, actionable insights based on this data.")
     lines.append("")
     lines.append("═" * 70)
-    lines.append("END OF PROMPT - Copy everything from 'You are a")
-    lines.append("transformational habit coach...' to here")
+    lines.append("END OF PROMPT")
     lines.append("═" * 70)
     
     return "\n".join(lines)

@@ -394,7 +394,37 @@ body {
     color: var(--accent-color);
     margin-bottom: 10px;
 }
+/* Journal entry text wrapping */
+.journal-content {
+    white-space: pre-wrap;      /* Preserve line breaks and wrap text */
+    word-wrap: break-word;      /* Break long words */
+    overflow-wrap: break-word;  /* Modern property for word breaking */
+    max-width: 100%;           /* Ensure it doesn't overflow container */
+}
 
+/* Ensure journal containers have proper constraints */
+.journal-entry, .journal-container, .entry-content {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Add line height for better readability */
+.entry-content {
+    line-height: 1.5;
+    margin: 10px 0;
+}
+
+/* Specific fix for view journal page */
+.entry-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+}
 .journal-entry-content {
     color: var(--text-primary);
     line-height: 1.8;
@@ -530,5 +560,196 @@ input[type="radio"]:checked + .mood-btn {
     .btn {
         width: 100%;
         text-align: center;
+    }
+}
+/* ============================================
+   JOURNAL ENTRIES PAGE FIXES
+   ============================================ */
+
+/* Fix for journal entries container */
+.journal-entries-container {
+    max-width: 100%;
+    overflow: visible;
+}
+
+/* Fix for individual journal entry cards */
+.journal-entry-card {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    max-width: 100%;
+    overflow: visible;
+    word-wrap: break-word;
+}
+
+/* Fix for journal entry content - REMOVE height constraints */
+.journal-entry-content {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    line-height: 1.6 !important;
+    padding: 15px !important;
+    background-color: var(--bg-secondary) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    margin: 15px 0 !important;
+    overflow: visible !important;
+    min-height: auto !important;
+    height: auto !important;
+}
+
+/* Ensure the content expands fully */
+.entry-content-full {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    line-height: 1.6;
+    padding: 15px;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin: 15px 0;
+}
+
+/* Fix for journal entry header */
+.journal-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.journal-entry-date {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-color);
+    margin: 0;
+}
+
+/* Fix for journal actions */
+.journal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Fix for tags display */
+.journal-tags-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.tag {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Remove any max-height or overflow constraints */
+.card-body {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Fix for the main content area */
+.container-fluid, 
+.container, 
+.col, 
+.row {
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+/* Ensure the journal content area expands fully */
+.col-md-8, .col-md-12, .col-lg-8, .col-lg-12 {
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+/* Fix for the journal text area in view mode */
+.journal-text-display {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    line-height: 1.6;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin: 15px 0;
+    min-height: auto;
+    height: auto;
+}
+
+/* Remove any bootstrap constraints that might be cutting content */
+.card {
+    overflow: visible !important;
+}
+
+.card-body {
+    overflow: visible !important;
+    min-height: auto !important;
+    height: auto !important;
+}
+
+/* Fix for specific journal view template */
+.entry-text,
+.entry-content,
+.journal-content {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    line-height: 1.6 !important;
+    padding: 20px !important;
+    background-color: var(--bg-secondary) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    margin: 15px 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* Ensure dark mode compatibility */
+[data-theme="dark"] .journal-entry-content,
+[data-theme="dark"] .entry-text,
+[data-theme="dark"] .entry-content,
+[data-theme="dark"] .journal-content {
+    background-color: var(--bg-primary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .journal-entry-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .journal-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .journal-entry-content,
+    .entry-text,
+    .entry-content,
+    .journal-content {
+        padding: 15px !important;
     }
 }

@@ -17,7 +17,7 @@ from controllers.user_controller import (
     create_user, get_user_by_email, get_user_by_id, 
     verify_password, get_all_users, delete_user
 )
-from controllers.report_controller import generate_report_data, format_report_as_text
+from controllers.report_controller import generate_report_data
 from datetime import datetime, timedelta
 from functools import wraps
 import config
